@@ -8,7 +8,7 @@ This is an implementation of the [HockeyApp SDK](https://github.com/bitstadium/H
 ## Import Library
 
 * Download the latest version of HockeySDK-.NET
-* Unzip the file.
+* Build the project
 * Copy the HockeySDK.dll to your project directory
 * Open your solution in Visual Studio
 * Right-click the group "References" and select "Add Reference".
