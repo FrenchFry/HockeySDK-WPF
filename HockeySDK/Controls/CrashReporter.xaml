@@ -4,8 +4,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
         mc:Ignorable="d"
-        Title="Problem Report for this application"
-        Width="572" Height="384" SizeToContent="Height" TextOptions.TextFormattingMode="Display" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"
+        Width="572" Height="384" SizeToContent="Height" TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType" RenderOptions.ClearTypeHint="Enabled"
+        UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality" SnapsToDevicePixels="True"
         Background="#FFF0F0F0" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -13,7 +14,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <Image Grid.Row="0" Width="60" Height="60" Margin="0,15,0,0" Name="AppIcon" VerticalAlignment="Top" />
+        <Image x:Name="AppIcon" Grid.Row="0" Width="60" Height="60" Margin="0,15,0,0" VerticalAlignment="Top" />
         
         <Grid Grid.Column="1" Margin="5,0,15,5">
             <Grid.RowDefinitions>
@@ -24,8 +25,7 @@
                 <RowDefinition Height="35"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Text="This application unexpectedly quit the last time it was run. Would you like to send a crash report to the developer?" Margin="0,15,0,0" FontSize="12" FontWeight="Normal" TextWrapping="WrapWithOverflow"
-                       Name="Header" />
+            <TextBlock x:Name="Header" Grid.Row="0" Margin="0,15,0,0" FontSize="12" FontWeight="Normal" TextWrapping="WrapWithOverflow" />
 
             <Grid Grid.Row="1" Height="Auto" Width="Auto" Margin="0,15,0,0">
                 <Grid.ColumnDefinitions>
@@ -34,30 +34,30 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,15,0">
-                    <TextBlock Text="Name" />
+                    <TextBlock x:Name="UserName" />
                     <TextBox Height="23" VerticalContentAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Vertical" Margin="15,0,0,0">
-                    <TextBlock Text="Email" />
+                    <TextBlock x:Name="Email" />
                     <TextBox Height="23" VerticalContentAlignment="Center" />
                 </StackPanel>
             </Grid>
 
             <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,15,0,0">
-                <TextBlock Text="Comments" />
+                <TextBlock x:Name="Comments" />
                 <TextBox TextWrapping="Wrap" Height="125" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
             </StackPanel>
 
-            <Expander ExpandDirection="Down" Grid.Row="3" Header="Details" Margin="0,15,0,15" VerticalAlignment="Center">
-                <TextBox Height="150" Margin="0,5,0,0" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
-                         ScrollViewer.CanContentScroll="True" TextWrapping="Wrap" Name="Details" />
+            <Expander x:Name="Details" ExpandDirection="Down" Grid.Row="3" Margin="0,15,0,15" VerticalAlignment="Center">
+                <TextBox x:Name="DetailsContent" Height="150" Margin="0,5,0,0" IsReadOnly="True" VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.CanContentScroll="True" TextWrapping="Wrap" />
             </Expander>
 
             <DockPanel Grid.Row="4" Height="23">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <Button Content="Cancel" MinWidth="70" Height="23" Padding="5,0,5,0" IsCancel="True" />
-                    <Button Content="Send" MinWidth="70" Height="23" Padding="5,0,5,0" Margin="6,0,0,0" IsDefault="True" Click="SendCrashReport" />
+                    <Button x:Name="Cancel" MinWidth="70" Height="23" Padding="5,0,5,0" IsCancel="True" />
+                    <Button x:Name="Send" MinWidth="70" Height="23" Padding="5,0,5,0" Margin="6,0,0,0" IsDefault="True" Click="SendCrashReport" />
                 </StackPanel>
             </DockPanel>
         </Grid>
