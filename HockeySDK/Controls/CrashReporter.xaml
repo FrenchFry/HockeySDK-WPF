@@ -22,6 +22,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="35"/>
             </Grid.RowDefinitions>
 
@@ -34,19 +35,19 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,15,0">
-                    <TextBlock x:Name="UserName" />
-                    <TextBox Height="23" VerticalContentAlignment="Center" />
+                    <TextBlock x:Name="NameLabel" />
+                    <TextBox x:Name="NameTextBox" Height="23" VerticalContentAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Vertical" Margin="15,0,0,0">
-                    <TextBlock x:Name="Email" />
-                    <TextBox Height="23" VerticalContentAlignment="Center" />
+                    <TextBlock x:Name="EmailLabel" />
+                    <TextBox x:Name="EmailTextBox" Height="23" VerticalContentAlignment="Center" />
                 </StackPanel>
             </Grid>
 
             <StackPanel Grid.Row="2" Orientation="Vertical" Margin="0,15,0,0">
-                <TextBlock x:Name="Comments" />
-                <TextBox TextWrapping="Wrap" Height="125" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
+                <TextBlock x:Name="CommentsLabel" />
+                <TextBox x:Name="CommentsTextBox" TextWrapping="Wrap" Height="125" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" />
             </StackPanel>
 
             <Expander x:Name="Details" ExpandDirection="Down" Grid.Row="3" Margin="0,15,0,15" VerticalAlignment="Center">
@@ -54,7 +55,9 @@
                          ScrollViewer.CanContentScroll="True" TextWrapping="Wrap" />
             </Expander>
 
-            <DockPanel Grid.Row="4" Height="23">
+            <TextBlock Grid.Row="4" x:Name="Privacy" />
+            
+            <DockPanel Grid.Row="5" Height="23">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <Button x:Name="Cancel" MinWidth="70" Height="23" Padding="5,0,5,0" IsCancel="True" />
                     <Button x:Name="Send" MinWidth="70" Height="23" Padding="5,0,5,0" Margin="6,0,0,0" IsDefault="True" Click="SendCrashReport" />

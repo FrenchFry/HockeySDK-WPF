@@ -11,6 +11,8 @@ namespace HockeyApp.Controls
     /// </summary>
     public partial class CrashReporter : Window
     {
+        #region Constructors
+
         /// <summary>
         /// Initializes new instance of the CrashReporter class.
         /// </summary>
@@ -55,12 +57,13 @@ namespace HockeyApp.Controls
 
             this.Title = string.Format(Properties.Resources.windowTitle, applicationName);
             this.Header.Text = string.Format(Properties.Resources.instructionText, applicationName, developerName);
-            this.UserName.Text = Properties.Resources.nameLabel;
-            this.Email.Text = Properties.Resources.emailLabel;
-            this.Comments.Text = Properties.Resources.commentsLabel;
+            this.NameLabel.Text = Properties.Resources.nameLabel;
+            this.EmailLabel.Text = Properties.Resources.emailLabel;
+            this.CommentsLabel.Text = Properties.Resources.commentsLabel;
             this.Details.Header = Properties.Resources.detailsLabel;
             this.Cancel.Content = Properties.Resources.cancel;
             this.Send.Content = Properties.Resources.send;
+            this.Privacy.Text = Properties.Resources.privacyNote;
 
             IsolatedStorageFile store = IsolatedStorageFile.GetUserStoreForAssembly();
             Stream fileStream = store.OpenFile(filepath, FileMode.Open);
@@ -73,6 +76,20 @@ namespace HockeyApp.Controls
             this.DetailsContent.Text = log;
         }
 
+        #endregion
+
+        #region Properties
+
+        public string UserName { get; set; }
+
+        public string UserEmail { get; set; }
+
+        public string UserComments { get; set; }
+
+        #endregion
+
+        #region Methods
+
         /// <summary>
         /// Handler for the button click event.
         /// </summary>
@@ -80,8 +97,14 @@ namespace HockeyApp.Controls
         /// <param name="e">The event arg.</param>
         private void SendCrashReport(object sender, RoutedEventArgs e)
         {
+            this.UserName = this.NameTextBox.Text;
+            this.UserEmail = this.EmailTextBox.Text;
+            this.UserComments = this.CommentsTextBox.Text;
+
             this.DialogResult = true;
             this.Close();
         }
+
+        #endregion
     }
 }

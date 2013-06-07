@@ -7,6 +7,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 using HockeyApp.Controls;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace HockeyApp
 {
@@ -45,6 +47,21 @@ namespace HockeyApp
         /// The developer or company name.
         /// </summary>
         private string developerName;
+
+        /// <summary>
+        /// The user name filled in the crash reporter window.
+        /// </summary>
+        private string userName;
+
+        /// <summary>
+        /// The user email filled in the crash reporter window.
+        /// </summary>
+        private string userEmail;
+
+        /// <summary>
+        /// The user comments filled in the crash reporter window.
+        /// </summary>
+        private string userComments;
 
         #endregion
 
@@ -153,6 +170,9 @@ namespace HockeyApp
 
                             if (reporter.DialogResult == true)
                             {
+                                userName = reporter.UserName;
+                                userEmail = reporter.UserEmail;
+                                userComments = reporter.UserComments;
                                 this.SendCrashes(store, filenames);
                             }
                             else
@@ -277,7 +297,6 @@ namespace HockeyApp
         /// <param name="filenames">The name of each file logs.</param>
         private void SendCrashes(IsolatedStorageFile store, string[] filenames)
         {
-            return;
             foreach (string filename in filenames)
             {
                 try
@@ -293,61 +312,64 @@ namespace HockeyApp
                     body += "raw=" + System.Uri.EscapeDataString(log);
                     body += "&sdk=" + SdkName;
                     body += "&sdk_version=" + SdkVersion;
+                    if (this.userName != null && this.userName != string.Empty)
+                    {
+                        body += "&userID=" + System.Uri.EscapeDataString(this.userName);
+                    }
+
+                    if (this.userEmail != null && this.userEmail != string.Empty)
+                    {
+                        body += "&contact=" + System.Uri.EscapeDataString(this.userEmail);
+                    }
+
+                    if (this.userComments != null && this.userComments != string.Empty)
+                    {
+                        body += "&description=" + System.Uri.EscapeDataString(this.userComments);
+                    }
 
                     fileStream.Close();
 
+                    System.Diagnostics.Debug.WriteLine("Creating Request");
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri("https://rink.hockeyapp.net/api/2/apps/" + this.identifier + "/crashes"));
                     request.Method = WebRequestMethods.Http.Post;
                     request.ContentType = "application/x-www-form-urlencoded";
                     request.UserAgent = "Hockey/Windows";
+                    System.Diagnostics.Debug.Print("End creating request");
 
-                    request.BeginGetRequestStream(
-                        requestResult =>
+                    Thread tr = new Thread(() =>
+                    {
+                        bool deleteCrashes = true;
+
+                        try
                         {
-                            try
-                            {
-                                Stream stream = request.EndGetRequestStream(requestResult);
-                                byte[] byteArray = Encoding.UTF8.GetBytes(body);
-                                stream.Write(byteArray, 0, body.Length);
-                                stream.Close();
+                            Stream requestStream = request.GetRequestStream();
+                            byte[] byteArray = Encoding.UTF8.GetBytes(body);
+                            requestStream.Write(byteArray, 0, body.Length);
+                            requestStream.Close();
 
-                                request.BeginGetResponse(
-                                    responseResult =>
-                                    {
-                                        bool deleteCrashes = true;
-                                        try
-                                        {
-                                            request.EndGetResponse(responseResult);
-                                        }
-                                        catch (WebException e)
-                                        {
-                                            if ((e.Status == WebExceptionStatus.ConnectFailure) ||
-                                                (e.Status == WebExceptionStatus.ReceiveFailure) ||
-                                                (e.Status == WebExceptionStatus.SendFailure) ||
-                                                (e.Status == WebExceptionStatus.Timeout) ||
-                                                (e.Status == WebExceptionStatus.UnknownError))
-                                            {
-                                                deleteCrashes = false;
-                                            }
-                                        }
-                                        catch (Exception)
-                                        {
-                                        }
-                                        finally
-                                        {
-                                            if (deleteCrashes)
-                                            {
-                                                this.DeleteCrashes(store, filenames);
-                                            }
-                                        }
-                                    },
-                                null);
-                            }
-                            catch (Exception)
+                            WebResponse resp = request.GetResponse();
+                        }
+                        catch (WebException e)
+                        {
+                            if ((e.Status == WebExceptionStatus.ConnectFailure) ||
+                                (e.Status == WebExceptionStatus.ReceiveFailure) ||
+                                (e.Status == WebExceptionStatus.SendFailure) ||
+                                (e.Status == WebExceptionStatus.Timeout) ||
+                                (e.Status == WebExceptionStatus.UnknownError))
                             {
+                                deleteCrashes = false;
                             }
-                        },
-                    null);
+                        }
+                        finally
+                        {
+                            if (deleteCrashes)
+                            {
+                                this.DeleteCrashes(store, filenames);
+                            }
+                        }
+                    });
+
+                    tr.Start();
                 }
                 catch (Exception)
                 {
