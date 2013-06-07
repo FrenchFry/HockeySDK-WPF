@@ -17,13 +17,14 @@ This is an implementation of the [HockeyApp SDK](https://github.com/bitstadium/H
 ## Modify Code
 
 * Open your App.xaml.cs
-* In the App constructor add the following line: <pre>HockeyApp.CrashHandler.Instance.Configure(this, APP_ID);</pre>
+* In the App constructor add the following line: <pre>HockeyApp.CrashHandler.Instance.Configure(this, APP_ID, AppName, CompanyName);</pre>
 * Replace APP_ID with the App ID of your application. You can find it on the HockeyApp website.
+* Replace AppName and CompanyName with your informations.
 * Open the window from which you want to check for crashes, for example MainWindow.xaml.cs.
 * In the constructor, add the following line: <pre>HockeyApp.CrashHandler.Instance.HandleCrashes(false);</pre>
 * Build and Run.
 
-Now every time an unhandled exception occurs, the app is killed. At the next start the user will be prompted to send a crash report.
+Now every time an unhandled exception occurs, the app will be killed, which is the normal behavior. At the next start the user will be prompted to send a crash report.
 
 ## Configure
 
@@ -33,11 +34,8 @@ Now every time an unhandled exception occurs, the app is killed. At the next sta
 
 There is a lot of things missing, so here is a list of thing to do:  
 
-* Name, Email and Comment fields are not used
-* The name of the application and the developer is not used in the crash report window
 * No default icon, it take the Application MainWindow icon
 * Ability to prompt the user right after the crash report instead of the next start
 * Related to the previous point, ability to handle crash, so the application doesn't get killed
 * Only the **Application.DispatcherUnhandledException** are handled now, **AppDomain.UnhandledException** should also be handled
-* Support for more language
 
