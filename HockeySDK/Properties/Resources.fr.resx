@@ -130,7 +130,7 @@
     <value>Email</value>
   </data>
   <data name="instructionText" xml:space="preserve">
-    <value>{0} s’est arrêté automatiquement lors de sa dernière utilisation. Souhaitez-vous envoyer un rapport de d'erreur à {1} ?</value>
+    <value>{0} s’est arrêté automatiquement lors de sa dernière utilisation. Souhaitez-vous envoyer un rapport d'erreur à {1} ?</value>
   </data>
   <data name="nameLabel" xml:space="preserve">
     <value>Nom</value>
