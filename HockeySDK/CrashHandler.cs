@@ -4,11 +4,10 @@ using System.IO;
 using System.IO.IsolatedStorage;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using HockeyApp.Controls;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace HockeyApp
 {
@@ -25,13 +24,29 @@ namespace HockeyApp
         /// The name of the crash logs directory.
         /// </summary>
         private const string CrashDirectoryName = "CrashLogs";
+
+        /// <summary>
+        /// The name of the SDK.
+        /// </summary>
         private const string SdkName = "HockeySDK";
+
+        /// <summary>
+        /// The version of the SDK.
+        /// </summary>
         private const string SdkVersion = "1.0";
 
         private static object padlock = new object();
         private static CrashHandler instance;
 
+        /// <summary>
+        /// The application attached to the crash reporter.
+        /// </summary>
         private Application application;
+
+        /// <summary>
+        /// The app domain attached to the crash reporter.
+        /// </summary>
+        private AppDomain appDomain;
 
         /// <summary>
         /// The HockeyApp app identifier.
@@ -63,10 +78,20 @@ namespace HockeyApp
         /// </summary>
         private string userComments;
 
+        /// <summary>
+        /// A boolean that indicates if this is an exception
+        /// received in the AppDomain UnhandledException event.
+        /// By default all exception are.
+        /// </summary>
+        private bool isAppDomainException = true;
+
         #endregion
 
         #region Properties
 
+        /// <summary>
+        /// Gets the unique instance of the CrashReporter.
+        /// </summary>
         public static CrashHandler Instance
         {
             get
@@ -91,17 +116,27 @@ namespace HockeyApp
         /// </summary>
         public string Package { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the crash report should indicate
+        /// if the exception comes from the ApplicationUnhandledException event or
+        /// from the AppDomain UnhandledException event.
+        /// </summary>
+        public bool IndicateAppDomainException { get; set; }
+
         #endregion
 
         /// <summary>
         /// Configure the crash reporter, each parameter are required.
         /// </summary>
         /// <param name="application">The application from which the exception will be handled.</param>
+        /// <param name="appDomain">The app domain from which the exception will be handled.</param>
         /// <param name="identifier">The HockeyApp application identifier.</param>
         /// <param name="applicationName">The name of the application.</param>
         /// <param name="developerName">The developer or company name.</param>
-        public void Configure(Application application, string identifier, string applicationName, string developerName)
+        public void Configure(Application application, AppDomain appDomain, string identifier, string applicationName, string developerName)
         {
+            this.IndicateAppDomainException = false;
+
             if (application == null)
             {
                 throw new ArgumentNullException("application");
@@ -128,13 +163,31 @@ namespace HockeyApp
                 this.identifier = identifier;
                 this.applicationName = applicationName;
                 this.developerName = developerName;
+                this.appDomain = appDomain;
 
                 this.application.DispatcherUnhandledException += this.OnDispatcherUnhandledException;
+
+                if (this.appDomain != null)
+                {
+                    this.appDomain.UnhandledException += this.OnUnhandledException;    
+                }
             }
             else
             {
                 throw new InvalidOperationException("CrashHandler was already configured!");
             }
+        }
+
+        /// <summary>
+        /// Configure the crash reporter, each parameter are required.
+        /// </summary>
+        /// <param name="application">The application from which the exception will be handled.</param>
+        /// <param name="identifier">The HockeyApp application identifier.</param>
+        /// <param name="applicationName">The name of the application.</param>
+        /// <param name="developerName">The developer or company name.</param>
+        public void Configure(Application application, string identifier, string applicationName, string developerName)
+        {
+            this.Configure(application, null, identifier, applicationName, developerName);
         }
 
         /// <summary>
@@ -170,9 +223,9 @@ namespace HockeyApp
 
                             if (reporter.DialogResult == true)
                             {
-                                userName = reporter.UserName;
-                                userEmail = reporter.UserEmail;
-                                userComments = reporter.UserComments;
+                                this.userName = reporter.UserName;
+                                this.userEmail = reporter.UserEmail;
+                                this.userComments = reporter.UserComments;
                                 this.SendCrashes(store, filenames);
                             }
                             else
@@ -190,17 +243,41 @@ namespace HockeyApp
         }
 
         /// <summary>
-        /// Handler or the DispatcherUnhandledException event.
+        /// Handler for the DispatcherUnhandledException event.
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event arg.</param>
+        /// <param name="e">The event args.</param>
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            this.isAppDomainException = false;
+
+            // If the user doesn't set an AppDomain, the exception will not be handled in the app domain
+            // event (which occurs if an AppDomain is set), so we create the crash report here.
+            if (this.appDomain == null)
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(this.CreateHeader());
+                builder.AppendLine();
+                builder.Append(this.CreateStackTrace(e.Exception));
+                this.SaveLog(builder.ToString());    
+            }
+        }
+
+        /// <summary>
+        /// Handler for the UnhandledException event.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event args.</param>
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             StringBuilder builder = new StringBuilder();
             builder.Append(this.CreateHeader());
             builder.AppendLine();
-            builder.Append(this.CreateStackTrace(e.Exception));
+            builder.Append(this.CreateStackTrace(e.ExceptionObject as Exception));
             this.SaveLog(builder.ToString());
+
+            // Reset the value.
+            this.isAppDomainException = true;
         }
 
         /// <summary>
@@ -232,6 +309,12 @@ namespace HockeyApp
 
             stringBuilder.AppendFormat("OS Bitness: {0}\n", bitness);
             stringBuilder.AppendFormat("Date: {0}\n", DateTime.UtcNow.ToString());
+
+            if (this.isAppDomainException == true && this.IndicateAppDomainException == true)
+            {
+                stringBuilder.AppendLine();
+                stringBuilder.AppendFormat("AppDomainException: YES\n");
+            }
 
             return stringBuilder.ToString();
         }

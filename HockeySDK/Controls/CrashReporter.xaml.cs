@@ -14,7 +14,7 @@ namespace HockeyApp.Controls
         #region Constructors
 
         /// <summary>
-        /// Initializes new instance of the CrashReporter class.
+        /// Initializes a new instance of the <see cref="CrashReporter" /> class.
         /// </summary>
         public CrashReporter()
         {
@@ -31,26 +31,6 @@ namespace HockeyApp.Controls
         public CrashReporter(string filepath, ImageSource icon, string applicationName, string developerName)
             : this()
         {
-            if (filepath == null)
-            {
-                throw new ArgumentNullException("filePath");
-            }
-
-            if (icon == null)
-            {
-                throw new ArgumentNullException("icon");
-            }
-
-            if (applicationName == null)
-            {
-                throw new ArgumentNullException("applicationName");
-            }
-
-            if (developerName == null)
-            {
-                throw new ArgumentNullException("developerName");
-            }
-
             this.Icon = icon;
 
             this.AppIcon.Source = icon;
@@ -80,10 +60,19 @@ namespace HockeyApp.Controls
 
         #region Properties
 
+        /// <summary>
+        /// Gets or sets the user name.
+        /// </summary>
         public string UserName { get; set; }
 
+        /// <summary>
+        /// Gets or sets the user email address.
+        /// </summary>
         public string UserEmail { get; set; }
 
+        /// <summary>
+        /// Gets or sets the user comments of the crash report.
+        /// </summary>
         public string UserComments { get; set; }
 
         #endregion
@@ -94,7 +83,7 @@ namespace HockeyApp.Controls
         /// Handler for the button click event.
         /// </summary>
         /// <param name="sender">The event sender.</param>
-        /// <param name="e">The event arg.</param>
+        /// <param name="e">The event args.</param>
         private void SendCrashReport(object sender, RoutedEventArgs e)
         {
             this.UserName = this.NameTextBox.Text;
