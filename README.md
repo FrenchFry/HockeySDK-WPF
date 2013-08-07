@@ -29,21 +29,24 @@ Now every time an unhandled exception occurs, the app will be killed, which is t
 ## Configure
 
 * Change the **Package** property to match the Bundle Identifier specified on HockeyApp. If the Package doesn't match crash report will not appear on HockeyApp. (By default the library will take the namespace of the application specified in the **Configure** method).
+
 * If you want to get crash report for AppDomain UnhandledException, you should use the Configure methods this way:
 	<pre>HockeyApp.CrashHandler.Instance.Configure(this, anAppDomain, APP_ID, AppName, CompanyName);</pre>
 Most of the time you should just replace **anAppDomain** by **AppDomain.CurrentDomain**.
+
 * Change the IndicateAppDomainException value to **true** if you want your crash report to indicate that the exception was catch by this event.
+
+* You can specify custom handlers for the **Application.DispatcherUnhandledException** and the **AppDomain.UnhandledException** handlers. This will allow you to perform custom operations (like for example preventing crash of the application, by handling exception). See Notes for more informations.
 
 ## Notes
 
-When the **AppDomain.UnhandledException** handler is not set, only the exception that occurs on the main UI thread of the application are handled by the **Application.DispatcherUnhandledException** (see [http://msdn.microsoft.com/en-us/library/system.windows.application.dispatcherunhandledexception(v=vs.100).aspx](http://msdn.microsoft.com/en-us/library/system.windows.application.dispatcherunhandledexception(v=vs.100).aspx)). Therefor it is highly recommended to provided a AppDomain to the crash report.  
-This library doesn't (yet) provide a way to Handle exception that occurs on the UI thread, with the property Handled of the event.
+When the **AppDomain.UnhandledException** handler is not set, only the exception that occurs on the main UI thread of the application are handled by the **Application.DispatcherUnhandledException** (see [msdn](http://msdn.microsoft.com/en-us/library/system.windows.application.dispatcherunhandledexception(v=vs.100).aspx)). Therefor it is highly recommended to provided an AppDomain to the crash report.
 
-## What's next
+If you set an AppDomain all exceptions will go through the **AppDomain.UnhandledException** handler. So for example if you set a custom handler for **Application.DispatcherUnhandledException** and doesn't set the Handled property to **true**, the application will crash. Therefor, if you use one custom handler, it is highly encouraged to use also the other one, since they work best together.
 
-There is a lot of things missing, so here is a list of thing to do:  
+## What's next  
 
 * No default icon, it take the Application MainWindow icon, or no icon, if none is provided
 * Ability to prompt the user right after the crash report instead of the next start
-* Related to the previous point, ability to handle crash, so the application doesn't get killed
+* Give access to methods for generating crash report and send them. So this can be used in custom handlers.
 

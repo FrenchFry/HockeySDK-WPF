@@ -87,6 +87,24 @@ namespace HockeyApp
 
         #endregion
 
+        #region Delegates
+
+        /// <summary>
+        /// Handles AppDomain exceptions.
+        /// </summary>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event args.</param>
+        public delegate void AppDomainExceptionHandler(object sender, UnhandledExceptionEventArgs e);
+
+        /// <summary>
+        /// Handles Dispatcher Exceptions
+        /// </summary>
+        /// <param name="sender">The sender of the events.</param>
+        /// <param name="e">The event args.</param>
+        public delegate void DispatcherExceptionHandler(object sender, DispatcherUnhandledExceptionEventArgs e);
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -122,6 +140,18 @@ namespace HockeyApp
         /// from the AppDomain UnhandledException event.
         /// </summary>
         public bool IndicateAppDomainException { get; set; }
+
+        /// <summary>
+        /// Gets or sets the custom handler for the DispatcherUnhandledException event handler.
+        /// If the custom handler is set, it will be used instead of the normal handler.
+        /// </summary>
+        public DispatcherExceptionHandler DispatcherExceptionCustomHandler { get; set; }
+
+        /// <summary>
+        /// Gets or sets the custom handler for the AppDomain UnhandledException event handler.
+        /// If the custom handler is set, it will be used instead of the normal handler.
+        /// </summary>
+        public AppDomainExceptionHandler AppDomainExceptionCustomHandler { get; set; }
 
         #endregion
 
@@ -249,17 +279,24 @@ namespace HockeyApp
         /// <param name="e">The event args.</param>
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            this.isAppDomainException = false;
-
-            // If the user doesn't set an AppDomain, the exception will not be handled in the app domain
-            // event (which occurs if an AppDomain is set), so we create the crash report here.
-            if (this.appDomain == null)
+            if (this.DispatcherExceptionCustomHandler != null)
             {
-                StringBuilder builder = new StringBuilder();
-                builder.Append(this.CreateHeader());
-                builder.AppendLine();
-                builder.Append(this.CreateStackTrace(e.Exception));
-                this.SaveLog(builder.ToString());    
+                this.DispatcherExceptionCustomHandler(sender, e);
+            }
+            else
+            {
+                this.isAppDomainException = false;
+
+                // If the user doesn't set an AppDomain, the exception will not be handled in the app domain
+                // event (which occurs if an AppDomain is set), so we create the crash report here.
+                if (this.appDomain == null)
+                {
+                    StringBuilder builder = new StringBuilder();
+                    builder.Append(this.CreateHeader());
+                    builder.AppendLine();
+                    builder.Append(this.CreateStackTrace(e.Exception));
+                    this.SaveLog(builder.ToString());
+                }
             }
         }
 
@@ -270,14 +307,21 @@ namespace HockeyApp
         /// <param name="e">The event args.</param>
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            StringBuilder builder = new StringBuilder();
-            builder.Append(this.CreateHeader());
-            builder.AppendLine();
-            builder.Append(this.CreateStackTrace(e.ExceptionObject as Exception));
-            this.SaveLog(builder.ToString());
+            if (this.AppDomainExceptionCustomHandler != null)
+            {
+                this.AppDomainExceptionCustomHandler(sender, e);
+            }
+            else
+            {
+                StringBuilder builder = new StringBuilder();
+                builder.Append(this.CreateHeader());
+                builder.AppendLine();
+                builder.Append(this.CreateStackTrace(e.ExceptionObject as Exception));
+                this.SaveLog(builder.ToString());
 
-            // Reset the value.
-            this.isAppDomainException = true;
+                // Reset the value.
+                this.isAppDomainException = true;
+            }
         }
 
         /// <summary>
