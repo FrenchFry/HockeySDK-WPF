@@ -78,31 +78,6 @@ namespace HockeyApp
         /// </summary>
         private string userComments;
 
-        /// <summary>
-        /// A boolean that indicates if this is an exception
-        /// received in the AppDomain UnhandledException event.
-        /// By default all exception are.
-        /// </summary>
-        private bool isAppDomainException = true;
-
-        #endregion
-
-        #region Delegates
-
-        /// <summary>
-        /// Handles AppDomain exceptions.
-        /// </summary>
-        /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event args.</param>
-        public delegate void AppDomainExceptionHandler(object sender, UnhandledExceptionEventArgs e);
-
-        /// <summary>
-        /// Handles Dispatcher Exceptions
-        /// </summary>
-        /// <param name="sender">The sender of the events.</param>
-        /// <param name="e">The event args.</param>
-        public delegate void DispatcherExceptionHandler(object sender, DispatcherUnhandledExceptionEventArgs e);
-
         #endregion
 
         #region Properties
@@ -134,42 +109,26 @@ namespace HockeyApp
         /// </summary>
         public string Package { get; set; }
 
-        /// <summary>
-        /// Gets or sets a value indicating whether the crash report should indicate
-        /// if the exception comes from the ApplicationUnhandledException event or
-        /// from the AppDomain UnhandledException event.
-        /// </summary>
-        public bool IndicateAppDomainException { get; set; }
-
-        /// <summary>
-        /// Gets or sets the custom handler for the DispatcherUnhandledException event handler.
-        /// If the custom handler is set, it will be used instead of the normal handler.
-        /// </summary>
-        public DispatcherExceptionHandler DispatcherExceptionCustomHandler { get; set; }
-
-        /// <summary>
-        /// Gets or sets the custom handler for the AppDomain UnhandledException event handler.
-        /// If the custom handler is set, it will be used instead of the normal handler.
-        /// </summary>
-        public AppDomainExceptionHandler AppDomainExceptionCustomHandler { get; set; }
-
         #endregion
 
         /// <summary>
         /// Configure the crash reporter, each parameter are required.
         /// </summary>
-        /// <param name="application">The application from which the exception will be handled.</param>
+        /// <param name="application">The application associated to the crash reporter.</param>
         /// <param name="appDomain">The app domain from which the exception will be handled.</param>
         /// <param name="identifier">The HockeyApp application identifier.</param>
         /// <param name="applicationName">The name of the application.</param>
         /// <param name="developerName">The developer or company name.</param>
         public void Configure(Application application, AppDomain appDomain, string identifier, string applicationName, string developerName)
         {
-            this.IndicateAppDomainException = false;
-
             if (application == null)
             {
                 throw new ArgumentNullException("application");
+            }
+
+            if (appDomain == null)
+            {
+                throw new ArgumentNullException("appDomain");
             }
 
             if (identifier == null)
@@ -195,29 +154,12 @@ namespace HockeyApp
                 this.developerName = developerName;
                 this.appDomain = appDomain;
 
-                this.application.DispatcherUnhandledException += this.OnDispatcherUnhandledException;
-
-                if (this.appDomain != null)
-                {
-                    this.appDomain.UnhandledException += this.OnUnhandledException;    
-                }
+                this.appDomain.UnhandledException += this.OnUnhandledException;
             }
             else
             {
                 throw new InvalidOperationException("CrashHandler was already configured!");
             }
-        }
-
-        /// <summary>
-        /// Configure the crash reporter, each parameter are required.
-        /// </summary>
-        /// <param name="application">The application from which the exception will be handled.</param>
-        /// <param name="identifier">The HockeyApp application identifier.</param>
-        /// <param name="applicationName">The name of the application.</param>
-        /// <param name="developerName">The developer or company name.</param>
-        public void Configure(Application application, string identifier, string applicationName, string developerName)
-        {
-            this.Configure(application, null, identifier, applicationName, developerName);
         }
 
         /// <summary>
@@ -273,31 +215,17 @@ namespace HockeyApp
         }
 
         /// <summary>
-        /// Handler for the DispatcherUnhandledException event.
+        /// Allows to log an exception not directly handled by this Crash Reporter.
         /// </summary>
-        /// <param name="sender">The sender of the event.</param>
-        /// <param name="e">The event args.</param>
-        private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        /// <param name="e">The exception to log.</param>
+        /// <param name="customInformation">Custom information to display in the crash report,it will be displayed after the crash report date.</param>
+        public void LogException(Exception e, string customInformation)
         {
-            if (this.DispatcherExceptionCustomHandler != null)
-            {
-                this.DispatcherExceptionCustomHandler(sender, e);
-            }
-            else
-            {
-                this.isAppDomainException = false;
-
-                // If the user doesn't set an AppDomain, the exception will not be handled in the app domain
-                // event (which occurs if an AppDomain is set), so we create the crash report here.
-                if (this.appDomain == null)
-                {
-                    StringBuilder builder = new StringBuilder();
-                    builder.Append(this.CreateHeader());
-                    builder.AppendLine();
-                    builder.Append(this.CreateStackTrace(e.Exception));
-                    this.SaveLog(builder.ToString());
-                }
-            }
+            StringBuilder builder = new StringBuilder();
+            builder.Append(this.CreateHeader(customInformation));
+            builder.AppendLine();
+            builder.Append(this.CreateStackTrace(e));
+            this.SaveLog(builder.ToString());
         }
 
         /// <summary>
@@ -307,28 +235,18 @@ namespace HockeyApp
         /// <param name="e">The event args.</param>
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            if (this.AppDomainExceptionCustomHandler != null)
-            {
-                this.AppDomainExceptionCustomHandler(sender, e);
-            }
-            else
-            {
-                StringBuilder builder = new StringBuilder();
-                builder.Append(this.CreateHeader());
-                builder.AppendLine();
-                builder.Append(this.CreateStackTrace(e.ExceptionObject as Exception));
-                this.SaveLog(builder.ToString());
-
-                // Reset the value.
-                this.isAppDomainException = true;
-            }
+            StringBuilder builder = new StringBuilder();
+            builder.Append(this.CreateHeader(null));
+            builder.AppendLine();
+            builder.Append(this.CreateStackTrace(e.ExceptionObject as Exception));
+            this.SaveLog(builder.ToString());
         }
 
         /// <summary>
         /// Creates the header portion of the crash log.
         /// </summary>
         /// <returns>A string that represents the header part of the crash log.</returns>
-        private string CreateHeader()
+        private string CreateHeader(string customInformation)
         {
             StringBuilder stringBuilder = new StringBuilder();
             if (!string.IsNullOrEmpty(this.Package))
@@ -354,10 +272,10 @@ namespace HockeyApp
             stringBuilder.AppendFormat("OS Bitness: {0}\n", bitness);
             stringBuilder.AppendFormat("Date: {0}\n", DateTime.UtcNow.ToString());
 
-            if (this.isAppDomainException == true && this.IndicateAppDomainException == true)
+            if (!string.IsNullOrEmpty(customInformation))
             {
                 stringBuilder.AppendLine();
-                stringBuilder.AppendFormat("AppDomainException: YES\n");
+                stringBuilder.AppendFormat(customInformation);
             }
 
             return stringBuilder.ToString();
