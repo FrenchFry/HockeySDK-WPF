@@ -245,6 +245,7 @@ namespace HockeyApp
         /// <summary>
         /// Creates the header portion of the crash log.
         /// </summary>
+        /// <param name="customInformation">A string that will be displayed in the crash log. Can be used to provide more information.</param>
         /// <returns>A string that represents the header part of the crash log.</returns>
         private string CreateHeader(string customInformation)
         {
@@ -374,12 +375,10 @@ namespace HockeyApp
 
                     fileStream.Close();
 
-                    System.Diagnostics.Debug.WriteLine("Creating Request");
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri("https://rink.hockeyapp.net/api/2/apps/" + this.identifier + "/crashes"));
                     request.Method = WebRequestMethods.Http.Post;
                     request.ContentType = "application/x-www-form-urlencoded";
                     request.UserAgent = "Hockey/Windows";
-                    System.Diagnostics.Debug.Print("End creating request");
 
                     Thread tr = new Thread(() =>
                     {
