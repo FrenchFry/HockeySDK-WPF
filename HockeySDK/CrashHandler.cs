@@ -275,7 +275,6 @@ namespace HockeyApp
 
             if (!string.IsNullOrEmpty(customInformation))
             {
-                stringBuilder.AppendLine();
                 stringBuilder.AppendFormat(customInformation);
             }
 
