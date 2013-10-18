@@ -260,7 +260,7 @@ namespace HockeyApp
             }
 
             stringBuilder.AppendFormat("Version: {0}\n", this.application.GetType().Assembly.GetName().Version.ToString());
-            stringBuilder.AppendFormat("Windows: {0}.{1}.{2}\n", Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor, Environment.OSVersion.Version.Build);
+            stringBuilder.AppendFormat("OS: {0}.{1}\n", Environment.OSVersion.Version.Major, Environment.OSVersion.Version.Minor);
             stringBuilder.AppendFormat("CLR Version: {0}\n", Environment.Version.ToString());
             stringBuilder.AppendFormat("OS Language: {0}\n", CultureInfo.InstalledUICulture.Name);
 
@@ -271,7 +271,7 @@ namespace HockeyApp
             }
 
             stringBuilder.AppendFormat("OS Bitness: {0}\n", bitness);
-            stringBuilder.AppendFormat("Date: {0}\n", DateTime.UtcNow.ToString());
+            stringBuilder.AppendFormat("Date: {0}\n", DateTime.UtcNow.ToString("o"));
 
             if (!string.IsNullOrEmpty(customInformation))
             {
